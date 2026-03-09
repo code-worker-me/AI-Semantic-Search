@@ -8,7 +8,7 @@ def get_embedding(text: str):
 def generate_json_summary(prompt_json: str):
     """Meminta llama merangkum dokumen dengan format JSON."""
     output = ollama.generate(
-        model="gemma3",
+        model="llama3.1",
         prompt=prompt_json,
         format="json"
     )
