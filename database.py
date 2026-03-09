@@ -79,3 +79,22 @@ def process_single_pdf(file_path, filename):
             print(f"[Auto-Detect] Gagal: File {filename} kosong atau berupa gambar scan.")
     except Exception as e:
         print(f"[Auto-Detect] Error membaca PDF: {str(e)}")
+        
+def remove_single_pdf(filename):
+    """Menghapus semua chunk dari database berdasarkan nama file."""
+    print(f"\n[Auto-Detect] File dihapus dari folder: {filename}")
+    
+    try:
+        all_data = collection.get()
+        all_ids = all_data['ids']
+        
+        ids_to_delete = [doc_id for doc_id in all_ids if doc_id.startswith(f"{filename}_part_")]
+        
+        if ids_to_delete:
+            collection.delete(ids=ids_to_delete)
+            print(f"[Auto-Detect] Berhasil menghapus {len(ids_to_delete)} chunks milik {filename} dari database.")
+        else:
+            print(f"[Auto-Detect] Tidak ada data yang perlu dihapus untuk {filename}.")
+            
+    except Exception as e:
+        print(f"[Auto-Detect] Error menghapus data PDF: {str(e)}")
