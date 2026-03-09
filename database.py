@@ -1,5 +1,5 @@
 import chromadb
-import PyPDF2
+import fitz
 import os
 from ai_service import get_embedding
 
@@ -24,9 +24,9 @@ def init_db(folder_path="arsip"):
             for filename in os.listdir(folder_path):
                 if filename.lower().endswith(".pdf"):
                     file_path = os.path.join(folder_path, filename)
-                    with open(file_path, 'rb') as file:
-                        reader = PyPDF2.PdfReader(file)
-                        full_text = "".join([page.extract_text() or "" for page in reader.pages])
+                    
+                    with fitz.open(file_path) as pdf_doc:
+                        full_text = "".join([page.get_text() for page in pdf_doc])
                         
                     if full_text.strip():
                         text_chunks = chunk_text(full_text)
@@ -54,25 +54,28 @@ def process_single_pdf(file_path, filename):
     """Fungsi untuk memproses dan embedding 1 file PDF."""
     print(f"\n[Auto-Detect] Menemukan file baru: {filename}")
     
-    with open(file_path, 'rb') as file:
-        reader = PyPDF2.PdfReader(file)
-        full_text = "".join([page.extract_text() or "" for page in reader.pages])
-        
-    if full_text.strip():
-        text_chunks = chunk_text(full_text)
-        documents, file_names = [], []
-        
-        for i, chunk in enumerate(text_chunks):
-            documents.append(chunk)
-            file_names.append(f"{filename}_part_{i+1}")
+    # fitz
+    try:
+        with fitz.open(file_path) as pdf_doc:
+            full_text = "".join([page.get_text() for page in pdf_doc])
             
-        for i, d in enumerate(documents):
-            embeddings = get_embedding(d)
-            collection.add(
-                ids=[file_names[i]],
-                embeddings=embeddings,
-                documents=[d]
-            )
-        print(f"[Auto-Detect] Selesai embedding: {filename} ({len(text_chunks)} chunks masuk ke database)")
-    else:
-        print(f"[Auto-Detect] Gagal: File {filename} kosong atau berupa gambar scan.")
+        if full_text.strip():
+            text_chunks = chunk_text(full_text)
+            documents, file_names = [], []
+            
+            for i, chunk in enumerate(text_chunks):
+                documents.append(chunk)
+                file_names.append(f"{filename}_part_{i+1}")
+                
+            for i, d in enumerate(documents):
+                embeddings = get_embedding(d)
+                collection.add(
+                    ids=[file_names[i]],
+                    embeddings=embeddings,
+                    documents=[d]
+                )
+            print(f"[Auto-Detect] Selesai embedding: {filename} ({len(text_chunks)} chunks masuk ke database)")
+        else:
+            print(f"[Auto-Detect] Gagal: File {filename} kosong atau berupa gambar scan.")
+    except Exception as e:
+        print(f"[Auto-Detect] Error membaca PDF: {str(e)}")
