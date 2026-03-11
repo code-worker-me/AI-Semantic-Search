@@ -1,7 +1,9 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, UploadFile, File
 import json
+import shutil
+import os
 from models import SearchRequest
-from database import search_documents
+from database import search_documents, process_single_pdf
 from ai_service import get_embedding, generate_json_summary
 
 router = APIRouter()
@@ -48,3 +50,25 @@ def search_arsip(request: SearchRequest):
         return {"data": data_json, "message": "Pencarian berhasil"}
     except json.JSONDecodeError:
         raise HTTPException(status_code=500, detail="Gagal memformat hasil dari AI.")
+    
+# Router untuk process pdf
+@router.post("/process-pdf")
+async def process_pdf(file: UploadFile = File(...)):
+    if not file.filename.lower().endswith('.pdf'):
+        raise HTTPException(status_code=400, detail="File harus berupa PDF.")
+    
+    folder_path = "arsip"
+    os.makedirs(folder_path, exist_ok=True)
+    file_path = os.path.join(folder_path, file.filename)
+    
+    try:
+        with open(file_path, "wb") as buffer:
+            shutil.copyfileobj(file.file, buffer)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Gagal menyimpan file: {str(e)}")
+    
+    try:
+        process_single_pdf(file_path, file.filename)
+        return {"status": "success", "message": f"File {file.filename} berhasil diproses ke vektor."}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Gagal memproses embedding: {str(e)}")

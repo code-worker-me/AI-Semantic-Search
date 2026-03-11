@@ -8,13 +8,13 @@ from watcher import start_watching
 async def lifespan(app: FastAPI):
     init_db()
     
-    observer = start_watching("arsip")
-    print("👀 Folder watcher aktif. Memantau penambahan PDF di folder 'arsip'...")
+    # observer = start_watching("arsip")
+    # print("👀 Folder watcher aktif. Memantau penambahan PDF di folder 'arsip'...")
     
     yield
-    observer.stop()
-    observer.join()
-    print("Folder watcher dimatikan.")
+    # observer.stop()
+    # observer.join()
+    # print("Folder watcher dimatikan.")
     
 app = FastAPI(
     title="Arsip Semantic Search API",
