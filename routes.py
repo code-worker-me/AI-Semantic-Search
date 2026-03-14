@@ -25,6 +25,7 @@ def search_arsip(request: SearchRequest):
         nama_file = raw_id.split('_part_')[0]
         konteks_dokumen += f"--- Arsip {idx + 1} ---\nNama File: {nama_file}\nIsi Dokumen: {doc}\n\n"
         
+    # 1. PERBAIKAN PROMPT: Dibuat sangat tegas dan tidak memberikan ruang untuk improvisasi
     prompt_json = f"""
     Anda adalah sistem pencari arsip pintar. 
     User sedang mencari: "{request.intensi}"
@@ -33,7 +34,13 @@ def search_arsip(request: SearchRequest):
     {konteks_dokumen}
     
     Tugas Anda: Buat deskripsi singkat (1-2 kalimat) untuk MASING-MASING dokumen.
-    Keluarkan jawaban HANYA dalam format Array of JSON:
+    
+    ATURAN SANGAT KETAT:
+    - Keluarkan jawaban HANYA dalam format Array of JSON murni.
+    - DILARANG MEMBUNGKUS data dengan object apapun (seperti {{"arsip": [...]}} atau {{"result": [...]}}).
+    - Jawaban HARUS diawali dengan tanda '[' dan diakhiri dengan tanda ']'.
+    
+    Contoh format yang WAJIB digunakan:
     [
       {{
         "id": 1,
@@ -59,10 +66,20 @@ def search_arsip(request: SearchRequest):
         
         data_json = json.loads(clean_string)
         
+        # 2. PERBAIKAN PENGEKSTRAK: Jika AI membandel membungkusnya dalam Dictionary
         if isinstance(data_json, dict):
-            data_json = [data_json]
+            # Ambil nama key pertama (misal: "arsip" atau "result")
+            first_key = next(iter(data_json))
             
+            # Jika isinya adalah Array/List, ekstrak keluarkan
+            if isinstance(data_json[first_key], list):
+                data_json = data_json[first_key]
+            else:
+                # Jika ternyata hanya 1 objek murni {"id": 1, "nama": "..."}, bungkus jadi list
+                data_json = [data_json]
+                
         return {"data": data_json, "message": "Pencarian berhasil"}
+        
     except json.JSONDecodeError:
         print(f"Error Decoding JSON dari AI. Output asli:\n{output_string}")
         raise HTTPException(status_code=500, detail="Gagal memformat hasil dari AI.")
