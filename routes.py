@@ -46,9 +46,25 @@ def search_arsip(request: SearchRequest):
     output_string = generate_json_summary(prompt_json)
     
     try:
-        data_json = json.loads(output_string)
+        clean_string = output_string.strip()
+        if clean_string.startswith("```json"):
+            clean_string = clean_string[7:]
+        elif clean_string.startswith("```"):
+            clean_string = clean_string[3:]
+        
+        if clean_string.endswith("```"):
+            clean_string = clean_string[:-3]
+
+        clean_string = clean_string.strip()
+        
+        data_json = json.loads(clean_string)
+        
+        if isinstance(data_json, dict):
+            data_json = [data_json]
+            
         return {"data": data_json, "message": "Pencarian berhasil"}
     except json.JSONDecodeError:
+        print(f"Error Decoding JSON dari AI. Output asli:\n{output_string}")
         raise HTTPException(status_code=500, detail="Gagal memformat hasil dari AI.")
     
 # Router untuk process pdf
