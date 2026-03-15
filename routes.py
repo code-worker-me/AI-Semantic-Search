@@ -105,3 +105,18 @@ async def process_pdf(file: UploadFile = File(...)):
         return {"status": "success", "message": f"File {file.filename} berhasil diproses ke vektor."}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Gagal memproses embedding: {str(e)}")
+    
+# Reset Database
+@router.post("/reset-db")
+def reset_database():
+    try:
+        folder_path = "./database/db_arsip"
+        
+        if os.path.exists(folder_path):
+            shutil.rmtree(folder_path)
+            return {"message": "Database vektor berhasil dihapus secara paksa."}
+        else:
+            return {"message": "Folder database tidak ditemukan, memori sudah kosong."}
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Gagal mereset database: {str(e)}")
