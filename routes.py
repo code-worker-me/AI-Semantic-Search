@@ -25,29 +25,19 @@ def search_arsip(request: SearchRequest):
         nama_file = raw_id.split('_part_')[0]
         konteks_dokumen += f"--- Arsip {idx + 1} ---\nNama File: {nama_file}\nIsi Dokumen: {doc}\n\n"
         
-    # 1. PERBAIKAN PROMPT: Dibuat sangat tegas dan tidak memberikan ruang untuk improvisasi
+    # 1. PERBAIKAN PROMPT KHUSUS QWEN
     prompt_json = f"""
-    Anda adalah sistem pencari arsip pintar. 
-    User sedang mencari: "{request.intensi}"
+    Anda adalah sistem ekstraksi data. Berikan output HANYA dalam format JSON Array murni tanpa penjelasan, tanpa format markdown, dan tanpa teks awalan/akhiran apa pun.
     
-    Berikut adalah beberapa potongan dokumen yang relevan: 
+    Intensi pencarian user: "{request.intensi}"
+    
+    Konteks Dokumen:
     {konteks_dokumen}
     
-    Tugas Anda: Buat deskripsi singkat (1-2 kalimat) untuk MASING-MASING dokumen.
-    
-    ATURAN SANGAT KETAT:
-    - Keluarkan jawaban HANYA dalam format Array of JSON murni.
-    - DILARANG MEMBUNGKUS data dengan object apapun (seperti {{"arsip": [...]}} atau {{"result": [...]}}).
-    - Jawaban HARUS diawali dengan tanda '[' dan diakhiri dengan tanda ']'.
-    
-    Contoh format yang WAJIB digunakan:
-    [
-      {{
-        "id": 1,
-        "nama": "nama_file.pdf",
-        "deskripsi": "..."
-      }}
-    ]
+    Berdasarkan konteks di atas, buatlah JSON Array di mana setiap objek memiliki:
+    - "id": angka berurutan
+    - "nama": Nama File dari dokumen
+    - "deskripsi": Ringkasan singkat 1-2 kalimat yang relevan dengan intensi user.
     """
     
     output_string = generate_json_summary(prompt_json)

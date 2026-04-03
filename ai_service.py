@@ -1,18 +1,16 @@
 import ollama
 
 def get_embedding(text: str):
-    """Menghasilkan vektor embedding dari teks."""
     response = ollama.embed(model="mxbai-embed-large", input=text)
     return response["embeddings"]
 
 def generate_json_summary(prompt_json: str):
-    """Meminta llama merangkum dokumen dengan format JSON."""
-    print("\n[AI Service] Mengirim prompt ke Llama 3.1...")
-    print("\n[AI Service] Llama 3.1 sedang menganalisis dokumen...")
+    print("\n[AI Service] Mengirim prompt ke LLM...")
+    print("\n[AI Service] LLM sedang menganalisis dokumen...")
     output = ollama.generate(
-        model="llama3.1",
+        model="qwen3:1.7b",
         prompt=prompt_json,
         format="json"
     )
-    print("\n[AI Service] Llama 3.1 selesai merespons.")
+    print("\n[AI Service] LLM selesai merespons.")
     return output['response']

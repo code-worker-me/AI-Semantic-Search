@@ -19,19 +19,19 @@ def chunk_text(text, chunk_size=1000, overlap=200):
     return chunks
 
 def extract_text_from_pdf(file_path: str, filename: str) -> str:
-    print(f"\n[Ekstraksi] 1. Membaca isi file: {filename}")
+    print(f"\n[Ekstract] 1. Reading file: {filename}")
     full_text= ""
     
     try:
         with fitz.open(file_path) as pdf_doc:
             full_text = "".join([page.get_text() for page in pdf_doc])
-        print(f"[EKSTRAKSI] 2. Hasil baca normal: Ditemukan {len(full_text.strip())} karakter.")
+        print(f"2. Result: Find {len(full_text.strip())} character.")
     except Exception as e:
-        print(f"[EKSTRAKSI] ❌ Gagal membaca secara normal: {e}")
+        print(f"❌ Failed: {e}")
         
     if len(full_text.strip()) < 50:
-        print(f"[OCR] Terdeteksi sebagai dokumen gambar/scan (< 50 karakter teks).")
-        print(f"[OCR] 3. Menyiapkan Poppler untuk mengubah PDF ke gambar...")
+        print(f"[OCR] Pdf image content")
+        print(f"[OCR] 3. Prepare poppler..")
         full_text = ""
         
         try:
