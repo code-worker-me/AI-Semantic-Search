@@ -2,7 +2,7 @@ import ollama
 
 def get_embedding(text: str):
     """Menghasilkan vektor embedding dari teks."""
-    response = ollama.embed(model="mxbai-embed-large", input=text)
+    response = ollama.embed(model="nomic-embed-text-v2-moe", input=text)
     return response["embeddings"]
 
 def generate_json_summary(prompt_json: str):
